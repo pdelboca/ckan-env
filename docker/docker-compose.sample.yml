@@ -22,12 +22,9 @@ services:
 
   postgresql_uni:
     container_name: postgresql_uni
-    # https://github.com/ckan/ckan-postgres-dev
-    image: ckan/ckan-postgres-dev:2.10
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+    build:
+      context: ./psql
+      dockerfile: "Dockerfile"
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
