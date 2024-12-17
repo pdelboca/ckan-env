@@ -9,7 +9,7 @@ echo "CKAN worker configuration"
 cat /etc/supervisor/conf.d/ckan-worker.conf
 
 # Prepaer the ckan supervisor command
-if [ "$IS_DEV_ENV" = "true" ] ; then
+if [ "$ENV_NAME" = "local" ] ; then
     if [ "$USE_LOCAL_HTTPS" = "true" ]; then
         export CMD="$APP_DIR/venv/bin/gunicorn -w 4 -b 0.0.0.0:5000 --chdir $APP_DIR --certfile=$APP_DIR/files/cert/localhost.cert --keyfile=$APP_DIR/files/cert/localhost.key --reload wsgi:application"
     else

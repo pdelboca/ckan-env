@@ -1,10 +1,10 @@
 #!/bin/bash -e
 
-echo "Executing entrypoint.sh ($IS_DEV_ENV)"
+echo "Executing entrypoint.sh ($ENV_NAME)"
 
 source ${APP_DIR}/venv/bin/activate
 
-if [ $IS_DEV_ENV == "true" ] ; then
+if [ $ENV_NAME == "local" ] ; then
     # If we are in the local environment, install the local extensions
     PREPARE_SCRIPT=$APP_DIR/files/scripts/prepare-local-dev-extensions.sh
     $PREPARE_SCRIPT
@@ -54,7 +54,7 @@ ckan config-tool ckan.ini "ckanext.datapusher_plus.api_token=${DATAPUSHER_TOKEN}
 ckan config-tool ckan.ini "ckanext.unckan.version=${CKAN_UNI_VERSION}"
 
 # for local env, create a sysadmin user
-if [ "$IS_DEV_ENV" = "true" ] ; then
+if [ "$ENV_NAME" = "local" ] ; then
     # check if user exists
     echo "Checking if sysadmin user exists"
     OUT=$(ckan user show ckan_admin)
