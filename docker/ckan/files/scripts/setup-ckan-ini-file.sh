@@ -1,10 +1,4 @@
 #!/bin/bash -e
-
-# load env vars from ${APP_DIR}/.env
-set -o allexport
-. ${APP_DIR}/.env
-set +o allexport
-
 echo "Setting up configuration file for $ENV_NAME environment"
 source ${APP_DIR}/venv/bin/activate
 cd $APP_DIR
@@ -27,7 +21,7 @@ ckan config-tool ${CKAN_INI} "debug = ${CKAN_DEBUG}"
 
 # Ensure USE_LOCAL_HTTPS and CKAN_SITE_URL are in sync 
 if [ "$USE_LOCAL_HTTPS" = "false" ]; then
-  if [ "$IS_DEV_ENV" = "true" ] ; then
+  if [ "$ENV_NAME" = "local" ] ; then
     # if CKAN_SITE_URL starts with https replace it with http
     if [[ $CKAN_SITE_URL == https* ]]; then
       echo "ERROR USE_LOCAL_HTTPS is false and CKAN_SITE_URL starts with https, replacing it with http"
@@ -51,7 +45,7 @@ ckan config-tool ${CKAN_INI} "ckan.datastore.write_url = ${DATASTORE_WRITE_URL}"
 ckan config-tool ${CKAN_INI} "ckan.datastore.read_url = ${DATASTORE_READ_URL}"
 
 # It look like the local auth app is different from the dev env app
-if [ "$IS_DEV_ENV" = "true" ] ; then
+if [ "$ENV_NAME" = "local" ] ; then
     # Increase vervosity for local environment
     ckan config-tool ckan.ini "ckanext.datapusher_plus.ssl_verify = false"
     ckan config-tool ${CKAN_INI} -s logger_ckan "level = INFO"

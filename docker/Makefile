@@ -25,7 +25,7 @@ debug:
 	docker compose run --service-ports ckan_uni
 
 up:
-	docker compose up
+	docker compose up --no-attach postgresql_uni --no-attach redis_uni --no-attach solr_uni
 
 build-up:
 	docker compose build

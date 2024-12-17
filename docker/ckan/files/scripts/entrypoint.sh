@@ -1,17 +1,20 @@
 #!/bin/bash -e
 
-# load env vars from ${APP_DIR}/.env
-set -o allexport
-. ${APP_DIR}/.env
-set +o allexport
+echo "Executing entrypoint.sh ($ENV_NAME)"
 
-echo "Executing entrypoint.sh ($IS_DEV_ENV)"
+source ${APP_DIR}/venv/bin/activate
 
-if [ "$IS_DEV_ENV" = "true" ] ; then
+if [ $ENV_NAME == "local" ] ; then
     # If we are in the local environment, install the local extensions
     PREPARE_SCRIPT=$APP_DIR/files/scripts/prepare-local-dev-extensions.sh
     $PREPARE_SCRIPT
+    echo "Installing dev requirements"
+    pip install -r ${APP_DIR}/ckan/dev-requirements.txt
+    pip install flask-debugtoolbar
 fi
+
+# Setup config file with env variables
+${APP_DIR}/files/scripts/setup-ckan-ini-file.sh
 
 # The CKAN PostgreSQL image creates the database and user
 # https://github.com/ckan/ckan-postgres-dev/blob/main/Dockerfile
@@ -21,8 +24,6 @@ until psql -d $SQLALCHEMY_URL -c '\q'; do
   echo "Postgres is unavailable - sleeping. Response: $?"
   sleep 3
 done
-
-source ${APP_DIR}/venv/bin/activate
 
 echo "CKAN DB init"
 ckan db init
@@ -43,6 +44,7 @@ ckan search-index rebuild
 LAST_MONTH=$(date -d '60 days ago' +'%Y-%m-%d')
 ckan tracking update $LAST_MONTH
 
+
 # Datapusher+ requires a valid API token to operate
 echo "Creating a valid API token for Datapusher+"
 DATAPUSHER_TOKEN=$(ckan user token add default datapusher_multi expires_in=365 unit=86400 | tail -n 1 | tr -d '\t')
@@ -52,7 +54,7 @@ ckan config-tool ckan.ini "ckanext.datapusher_plus.api_token=${DATAPUSHER_TOKEN}
 ckan config-tool ckan.ini "ckanext.unckan.version=${CKAN_UNI_VERSION}"
 
 # for local env, create a sysadmin user
-if [ "$IS_DEV_ENV" = "true" ] ; then
+if [ "$ENV_NAME" = "local" ] ; then
     # check if user exists
     echo "Checking if sysadmin user exists"
     OUT=$(ckan user show ckan_admin)
@@ -83,9 +85,6 @@ fi
 # Rebuild webassets in can they were patched
 echo "Rebuilding CkAN webassets"
 ckan asset build
-
-echo "Setting permissions for datastore"
-ckan datastore set-permissions | psql $(grep ckan.datastore.write_url ckan.ini | awk -F= '{print $2}')
 
 # Start supervidor
 echo "Supervisor start"

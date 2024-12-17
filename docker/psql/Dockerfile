@@ -1,7 +1,4 @@
-ARG PG_IMAGE=15-alpine
-FROM postgres:$PG_IMAGE
-LABEL maintainer="CKAN Tech team"
-# from https://github.com/ckan/ckan-postgres-dev
+FROM postgres:15-alpine
 
 # Postgres settings
 ENV POSTGRES_PASSWORD="pass"
