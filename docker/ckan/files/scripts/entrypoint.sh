@@ -1,17 +1,20 @@
 #!/bin/bash -e
 
-# load env vars from ${APP_DIR}/.env
-set -o allexport
-. ${APP_DIR}/.env
-set +o allexport
-
 echo "Executing entrypoint.sh ($IS_DEV_ENV)"
 
-if [ "$IS_DEV_ENV" = "true" ] ; then
+source ${APP_DIR}/venv/bin/activate
+
+if [ $IS_DEV_ENV == "true" ] ; then
     # If we are in the local environment, install the local extensions
     PREPARE_SCRIPT=$APP_DIR/files/scripts/prepare-local-dev-extensions.sh
     $PREPARE_SCRIPT
+    echo "Installing dev requirements"
+    pip install -r ${APP_DIR}/ckan/dev-requirements.txt
+    pip install flask-debugtoolbar
 fi
+
+# Setup config file with env variables
+${APP_DIR}/files/scripts/setup-ckan-ini-file.sh
 
 # The CKAN PostgreSQL image creates the database and user
 # https://github.com/ckan/ckan-postgres-dev/blob/main/Dockerfile
@@ -21,8 +24,6 @@ until psql -d $SQLALCHEMY_URL -c '\q'; do
   echo "Postgres is unavailable - sleeping. Response: $?"
   sleep 3
 done
-
-source ${APP_DIR}/venv/bin/activate
 
 echo "CKAN DB init"
 ckan db init
@@ -42,6 +43,7 @@ ckan search-index rebuild
 # Update tracking
 LAST_MONTH=$(date -d '60 days ago' +'%Y-%m-%d')
 ckan tracking update $LAST_MONTH
+
 
 # Datapusher+ requires a valid API token to operate
 echo "Creating a valid API token for Datapusher+"

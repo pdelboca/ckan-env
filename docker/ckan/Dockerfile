@@ -14,13 +14,6 @@ RUN apt update
 # Copy files one by one to ensure Dockerfile is caching layers
 # and the change in one file does not invalidate the cache of the others
 
-# Prepare the environment vars
-COPY files/scripts/build-env-vars.sh ${APP_DIR}/files/scripts/build-env-vars.sh
-
-COPY files/env/base.env ${APP_DIR}/files/env/base.env
-COPY files/env/${ENV_NAME}.env ${APP_DIR}/files/env/${ENV_NAME}.env
-RUN ${APP_DIR}/files/scripts/build-env-vars.sh
-
 # Install OS dependencies
 COPY files/scripts/install-python.sh ${APP_DIR}/files/scripts/install-python.sh
 RUN ${APP_DIR}/files/scripts/install-python.sh
@@ -55,7 +48,6 @@ RUN ${APP_DIR}/files/scripts/install-ckan.sh
 RUN ${APP_DIR}/files/scripts/install-extensions.sh
 RUN cp $APP_DIR/ckan/wsgi.py .
 RUN chmod u+x wsgi.py
-RUN ${APP_DIR}/files/scripts/setup-ckan-ini-file.sh
 
 HEALTHCHECK --interval=60s --timeout=5s --retries=5 CMD curl --fail http://localhost:5000/api/3/action/status_show || exit 1
 EXPOSE 5000

@@ -1,7 +1,3 @@
-set -o allexport
-. ${APP_DIR}/.env
-set +o allexport
-
 # Define the "ckan" user as the owner of supervisor processes
 envsubst < $APP_DIR/files/etc/supervisord.conf > /etc/supervisor/supervisord.conf
 echo "Supervisor configuration"
